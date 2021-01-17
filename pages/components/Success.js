@@ -11,7 +11,7 @@ export default function publicKey(props){
         <Grid container alignItems="center" justify="center" spacing={3} style={{padding:"2rem"}}>
             <Grid item>
                 <Typography variant="h5">
-                    Congratulations! You now have {props.quantity} of your newly minted {props.assetName} NFT!
+                    Congratulations! You now have the newly minted {props.assetName} NFT in your Stellar wallet!
                 </Typography>
                 <Typography align="center">
                     IPFS Link : <Link href={link} target="_blank">{link}</Link><br/>
