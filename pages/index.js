@@ -9,6 +9,9 @@ import Transaction from './components/Transaction'
 import FileUploader from './components/FileUploader'
 import * as Stellar from '../stellar/stellar'
 import Success from './components/Success'
+import AppBar from '@material-ui/core/AppBar'
+import Typography from '@material-ui/core/Typography'
+import Head from 'next/head'
 
 export default function Main(){
     const [activeStep, setActiveStep] = React.useState(0);
@@ -91,6 +94,15 @@ export default function Main(){
 
     return(
         <div>
+            <Head>
+                <title>Stellar NFT Wizard</title>
+                <link rel="icon" href="favicon.ico"></link>
+            </Head>
+            <AppBar>
+                <Typography variant="h5" style={{padding:"1rem"}}>
+                🧙 Stellar NFT Wizard
+                </Typography>
+            </AppBar>
             <Grid
             container
             spacing={0}
