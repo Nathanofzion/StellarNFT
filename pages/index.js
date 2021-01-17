@@ -1,65 +1,145 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import React from 'react';
+import ProgressStepper from './components/ProgressStepper'
+import Grid from '@material-ui/core/Grid'
+import Container from '@material-ui/core/Container'
+import SimpleCard from './components/SimpleCard'
+import NFTInfo from './components/NFTInfo'
+import PublicKey from './components/PublicKey'
+import Transaction from './components/Transaction'
+import FileUploader from './components/FileUploader'
+import * as Stellar from '../stellar/stellar'
+import Success from './components/Success'
 
-export default function Home() {
-  return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
+export default function Main(){
+    const [activeStep, setActiveStep] = React.useState(0);
+    const [errorMessage, setErrorMessage] = React.useState('');
+  
+    const [tokenName, setTokenName] = React.useState('');
+    const [tokenAmount, setTokenAmount] = React.useState(1)
+    
+    const [publicKey, setPublicKey] = React.useState('');
+    
+    const [uri, setUri] = React.useState('')
+    const [privateKey, setPrivateKey] = React.useState('')
 
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
+    const [generatedTransaction, setGeneratedTransaction] = React.useState('')
+    const [issuerPublicKey, setIssuerPublicKey] = React.useState('')
+    const [issuerPrivateKey, setIssuerPrivateKey] = React.useState('')
+    const [NFTAsset, setNFTAsset] = React.useState('')
+    const [formData, setFormData] = React.useState('')
 
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
+    const [hash, setHash] = React.useState('')
 
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
+    const steps = ['Upload image', 'NFT info', 'Enter Public Key', 'Create Transaction', 'Success!']
 
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
 
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
+    const handleNameChange = (event) => {
+        setTokenName(event.target.value);
+    }
 
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+    const handleAmountChange = (event) => {
+        setTokenAmount(event.target.value);
+    }
+
+    const handlePublicKeyChange = (event) => {
+        setPublicKey(event.target.value)
+    }
+
+    const handlePrivateKeyChange = (event) => {
+        setPrivateKey(event.target.value)
+    }
+
+    const goToPublicKey = () => {
+        setActiveStep(2)
+    }
+
+    const validatePublicKey = async () => {
+        const accountCheck = await Stellar.checkAccount(publicKey)
+        if(accountCheck.passed){
+            setErrorMessage('');
+            const response = await Stellar.createIssuerAccount(publicKey, tokenName, tokenAmount)
+            setUri(response.uri)
+            setGeneratedTransaction(response.transaction)
+            setIssuerPrivateKey(response.issuerPrivateKey)
+            setIssuerPublicKey(response.issuerPublicKey)
+            setNFTAsset(response.NFTAsset)
+            setActiveStep(3)
+            console.log(response)
+        } else{
+            setErrorMessage(accountCheck.errorMessage);
+        }
+    }
+
+    const createFromPrivateKey = async () =>{
+        const response = await Stellar.createNFTFromPrivateKey(issuerPrivateKey, 
+            privateKey, generatedTransaction, NFTAsset, formData, Number.parseInt(tokenAmount))
+        console.log(response);
+        setHash(response.ipfsHash)
+        if(response.successful) setActiveStep(4)
+    }
+
+    const createFromQr = async () => {
+        const response = await Stellar.createNFTFromQRCode(issuerPrivateKey, publicKey, NFTAsset, formData, Number.parseInt(tokenAmount))
+        setHash(response.ipfsHash)
+        if(response.successful) setActiveStep(4)
+    }
+
+    const storeImageTemp = (data) => {
+        setFormData(data)
+        setActiveStep(1)
+    }
+
+    return(
+        <div>
+            <Grid
+            container
+            spacing={0}
+            style={{ minHeight: '100vh' }}
+            >
+                <Container 
+                maxWidth="md" 
+                style={{paddingTop:'20vh'}}
+                >
+                    <SimpleCard>
+                        <ProgressStepper activeStep={activeStep} steps={steps}/> 
+                        {activeStep==0 &&
+                            <FileUploader
+                                onUpload={storeImageTemp}
+                            />
+                        } 
+                        {activeStep==1 && <NFTInfo 
+                            tokenName={tokenName} 
+                            tokenAmount={tokenAmount} 
+                            onAmountChange={handleAmountChange}
+                            onNameChange={handleNameChange}
+                            nextStep={goToPublicKey}/>}
+
+                        {activeStep==2 &&  <PublicKey
+                            publicKey={publicKey}
+                            onChange={handlePublicKeyChange}
+                            validate={validatePublicKey}
+                            errorMessage={errorMessage}
+                        />}
+                        {activeStep==3 && <Transaction
+                            uri={uri}
+                            privateKey={privateKey}
+                            onChange={handlePrivateKeyChange}
+                            errorMessage={errorMessage}
+                            createFromPrivateKey={createFromPrivateKey}
+                            createFromQr={createFromQr}
+                        />}
+                        {activeStep==4 &&
+                            <Success 
+                            hash={hash}
+                            publicKey={publicKey}
+                            assetName={tokenName}
+                            issuer={issuerPublicKey}
+                            quanity={tokenAmount}
+                            />
+                        }
+                    </SimpleCard> 
+                </Container>
+            </Grid>                
         </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
-  )
+    )
 }

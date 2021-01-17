@@ -8,8 +8,20 @@
     "start": "next start"
   },
   "dependencies": {
+    "@material-ui/core": "^4.11.2",
+    "@pinata/sdk": "^1.1.11",
+    "@stellarguard/stellar-uri": "^3.0.0",
+    "axios": "^0.21.1",
+    "dotenv": "^8.2.0",
+    "formidable": "^1.2.2",
+    "formidable-serverless": "^1.1.1",
+    "fs": "^0.0.1-security",
+    "ipfs-http-client": "^48.2.0",
     "next": "10.0.5",
+    "qrcode.react": "^1.0.1",
     "react": "17.0.1",
-    "react-dom": "17.0.1"
+    "react-dom": "17.0.1",
+    "react-dropzone": "^11.2.4",
+    "stellar-sdk": "^7.0.0"
   }
 }
